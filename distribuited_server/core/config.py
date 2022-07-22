@@ -64,25 +64,51 @@ aux_timing_traffic_light = [
 ]
 
 from time import sleep
-from threading import Thread
+from threading import Thread, Event
+from queue import Queue
 
 NUMBER_OF_STATES = 6
 
-def handle_traffic_light_change(traffic_light, c_type):
+def handle_traffic_light_change():
     state = 0
+    sec = 0
     while True:
-        curr_state = traffic_light[state]
-        print("{}: {} [STATE]: {}".format(c_type, curr_state['active'], state))
-        sleep(curr_state['time_max'])
-        state = next_state(state)
+
+        main_curr_state = main_timing_traffic_light[state]
+        aux_curr_state = aux_timing_traffic_light[state]
+
+        print('SEC {}'.format(sec))
+        print("PRINCIPAL: {} [STATE]: {}".format(main_curr_state['active'], state))
+        print("AUXILIAR: {} [STATE]: {}".format(aux_curr_state['active'], state))
+        print('\n')
+
+        sleep(1)
+        sec += 1
+
+        if button_pressed.is_set():
+            print('CHANGING SIGN STATE')
+            if sec >= main_curr_state['time_min']:
+                button_pressed.clear()
+                state = 0
+                sec = 0
+        elif sec == main_curr_state['time_max']:
+            sec = 0
+            state = next_state(state)
 
 def next_state(current_state):
     return (current_state + 1) % NUMBER_OF_STATES
 
-main_thread = Thread(target=handle_traffic_light_change, args=(main_timing_traffic_light, 'principal'))
-aux_thread = Thread(target=handle_traffic_light_change, args=(aux_timing_traffic_light, 'auxiliar'))
+def handle_button_press():
+    sleep(5)
+    print("stoping sign...")
+    button_pressed.set()
 
-main_thread.start()
-aux_thread.start()
+
+button_pressed = Event()
+traffic_thread  = Thread(target=handle_traffic_light_change)
+button_thread = Thread(target=handle_button_press)
+
+traffic_thread.start()
+button_thread.start()
 
 
