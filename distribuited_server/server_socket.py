@@ -32,7 +32,5 @@ def init_socket():
     socket_thread.start()
 
 def send_message(message):
-    print(connetion)
-    print(message)
     if connetion:
         connetion.send(json.dumps(message))

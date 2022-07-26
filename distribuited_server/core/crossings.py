@@ -21,16 +21,11 @@ def handle_traffic_light_change():
 
         handle_lights_on(main_active)
         handle_lights_on(aux_active)
-
-        print('SEC {}'.format(sec))
-        print("PRINCIPAL: {} [STATE]: {}".format(main_active, state))
-        print("AUXILIAR: {} [STATE]: {}".format(aux_active, state))
-        print('\n')
-
+        
         sleep(1)
         sec += 1
 
-        if False  and is_button_pressed() and is_min_timer(sec, main_curr_state['time_min']):
+        if is_button_pressed() and is_min_timer(sec, main_curr_state['time_min']):
             state = 0
             sec = 0
             handle_lights_off(main_active)
@@ -43,7 +38,7 @@ def handle_traffic_light_change():
             state = next_state(state)
 
 def handle_button_press():
-    sleep(15)
+    sleep(27)
     print("stoping sign...")
     stop_button_pressed.set()
     send_message({"message": "Changing lights!"})
@@ -66,6 +61,8 @@ def is_max_timer(sec, timer):
     return sec == timer
 
 def is_min_timer(sec, timer):
+    print(sec)
+    print(timer)
     return sec >= timer
 
 def next_state(current_state):
@@ -73,10 +70,10 @@ def next_state(current_state):
 
 def init_crossing():
     traffic_thread  = Thread(target=handle_traffic_light_change)
-    # button_thread = Thread(target=handle_button_press)
+    button_thread = Thread(target=handle_button_press)
 
     traffic_thread.start()
-    # button_thread.start()
+    button_thread.start()
 
     traffic_thread.join()
-    # button_thread.join()
+    button_thread.join()
