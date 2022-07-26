@@ -1,4 +1,5 @@
-# import RPi.GPIO as GPIO
+import RPi.GPIO as GPIO
+from time import sleep
 
 
 ''' CROSS 1  '''
@@ -28,7 +29,7 @@ TRAFFIC_LIGHT_1_YELLOW_C1_C2 = 3
 TRAFFIC_LOGHT_1_RED_C2 = 11
 
 TRAFFIC_LIGHT_2_GREEN_C2 = 0
-TRAFFIC_LIGHT_2_YELLOW_C2 = 15
+TRAFFIC_LIGHT_2_YELLOW_C2 = 5
 TRAFFIC_LIGHT_2_RED_C2 = 6
 
 PEDESTRIAN_BUTTON_1_C2 = 10
@@ -50,6 +51,8 @@ main_yellow_lights = [TRAFFIC_LIGHT_1_YELLOW_C1, TRAFFIC_LIGHT_1_YELLOW_C1_C2]
 aux_red_lights = [TRAFFIC_LIGHT_2_RED_C1, TRAFFIC_LIGHT_2_RED_C2]
 aux_green_lights = [TRAFFIC_LIGHT_2_GREEN_C1, TRAFFIC_LIGHT_2_GREEN_C2]
 aux_yellow_lights = [TRAFFIC_LIGHT_2_YELLOW_C1, TRAFFIC_LIGHT_2_YELLOW_C2]
+
+outputs = main_red_lights + main_green_lights + main_yellow_lights + aux_red_lights + aux_green_lights + aux_yellow_lights
 
 inputs_buttons = [
     PEDESTRIAN_BUTTON_1_C1,  
@@ -74,10 +77,31 @@ intputs_sensors = [
 ]
 
 
+def reset_outputs():
+    for out in outputs:
+        GPIO.output(out, GPIO.LOW)
+
+def set_outputs():
+    for out in outputs:
+        GPIO.setup(out, GPIO.OUT)
+
+def set_input_buttons():
+    for b in inputs_buttons:
+        GPIO.setup(b, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+
+def set_input_sensors():
+    for s in intputs_sensors:
+        GPIO.setup(s, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+
 def config_gpio():
     print('Setting up gpio ports...')
-    # GPIO.setup(outputs, GPIO.OUT)
-    # GPIO.setup(inputs_botao, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
-    # GPIO.setup(intputs_sensores, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+    GPIO.setmode(GPIO.BCM)
+    set_outputs()
+    set_input_buttons()
+    set_input_sensors()
+    reset_outputs()
+
+
+
 
 
