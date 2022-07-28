@@ -44,13 +44,13 @@ SPEED_SENSOR_1_B_C2 = 22
 SPEED_SENSOR_2_A_C2 = 13
 SPEED_SENSOR_2_B_C2 = 19
 
-main_red_lights = [TRAFFIC_LOGHT_1_RED_C1, TRAFFIC_LOGHT_1_RED_C2]
-main_green_lights = [TRAFFIC_LIGHT_1_GREEN_C1, TRAFFIC_LIGHT_1_GREEN_C2]
-main_yellow_lights = [TRAFFIC_LIGHT_1_YELLOW_C1, TRAFFIC_LIGHT_1_YELLOW_C1_C2]
+aux_red_lights = [TRAFFIC_LOGHT_1_RED_C1, TRAFFIC_LOGHT_1_RED_C2]
+aux_green_lights = [TRAFFIC_LIGHT_1_GREEN_C1, TRAFFIC_LIGHT_1_GREEN_C2]
+aux_yellow_lights = [TRAFFIC_LIGHT_1_YELLOW_C1, TRAFFIC_LIGHT_1_YELLOW_C1_C2]
 
-aux_red_lights = [TRAFFIC_LIGHT_2_RED_C1, TRAFFIC_LIGHT_2_RED_C2]
-aux_green_lights = [TRAFFIC_LIGHT_2_GREEN_C1, TRAFFIC_LIGHT_2_GREEN_C2]
-aux_yellow_lights = [TRAFFIC_LIGHT_2_YELLOW_C1, TRAFFIC_LIGHT_2_YELLOW_C2]
+main_red_lights = [TRAFFIC_LIGHT_2_RED_C1, TRAFFIC_LIGHT_2_RED_C2]
+main_green_lights = [TRAFFIC_LIGHT_2_GREEN_C1, TRAFFIC_LIGHT_2_GREEN_C2]
+main_yellow_lights = [TRAFFIC_LIGHT_2_YELLOW_C1, TRAFFIC_LIGHT_2_YELLOW_C2]
 
 outputs = main_red_lights + main_green_lights + main_yellow_lights + aux_red_lights + aux_green_lights + aux_yellow_lights
 

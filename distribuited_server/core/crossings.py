@@ -6,15 +6,17 @@ from gpio.output_functions import turn_up_port, turn_off_port
 from gpio.input_functions import watch_input_event
 
 
-from gpio.config import PEDESTRIAN_BUTTON_1_C1, PEDESTRIAN_BUTTON_2_C1
+from gpio.config import PEDESTRIAN_BUTTON_1_C1, PEDESTRIAN_BUTTON_2_C1, MOVEMENT_SENSOR_1_C1, MOVEMENT_SENSOR_2_C1
+from gpio.config import PEDESTRIAN_BUTTON_1_C2, PEDESTRIAN_BUTTON_2_C2, MOVEMENT_SENSOR_1_C2, MOVEMENT_SENSOR_2_C2
 
 
 NUMBER_OF_STATES = 6
-stop_button_1_pressed = Event()
-stop_button_2_pressed = Event()
+MAIN_TRAFFIC_GREEN = 0
+AUX_TRAFFIC_GREEN = 3
+stop_event = Event()
 
 def handle_traffic_light_change():
-    state = 0
+    state = MAIN_TRAFFIC_GREEN
     sec = 0
 
     while True:
@@ -30,11 +32,10 @@ def handle_traffic_light_change():
         
         sleep(1)
         sec += 1
-
-        if is_button_pressed() and is_min_timer(sec, main_curr_state['time_min']):
+        if is_stop_event_active() and is_min_timer(sec, main_curr_state['time_min']):
             handle_lights_off(main_active)
             handle_lights_off(aux_active)
-            state = 3 if stop_button_1_pressed.is_set() else 0
+            state = AUX_TRAFFIC_GREEN
             sec = 0
             clear_button()
         elif is_max_timer(sec, main_curr_state['time_max']):
@@ -43,14 +44,10 @@ def handle_traffic_light_change():
             handle_lights_off(aux_active)
             state = next_state(state)
 
-def handle_button_press(channel):
+def handle_input_event(channel):
     print("stoping sign... channel={}".format(channel))
+    stop_event.set()
 
-    if channel == PEDESTRIAN_BUTTON_1_C1:
-        stop_button_1_pressed.set()
-        return
-
-    stop_button_2_pressed.set()
 
 def handle_lights_on(lights):
     for l in lights:
@@ -61,34 +58,39 @@ def handle_lights_off(lights):
         turn_off_port(l)
 
 def clear_button():
-     stop_button_1_pressed.clear()
-     stop_button_2_pressed.clear()
+     stop_event.clear()
 
-def is_button_pressed():
-    return stop_button_1_pressed.is_set() or stop_button_2_pressed.is_set()
+def is_stop_event_active():
+    return stop_event.is_set()
 
 def is_max_timer(sec, timer):
+    print("sec: {}".format(sec))
+    print("max time: {}".format(timer))
     return sec == timer
 
 def is_min_timer(sec, timer):
-    print(sec)
-    print(timer)
+    print("sec: {}".format(sec))
+    print("min time: {}".format(timer))
     return sec >= timer
 
 def next_state(current_state):
     return (current_state + 1) % NUMBER_OF_STATES
 
-def watch_pedestrian_button_1_c1():
-    watch_input_event(PEDESTRIAN_BUTTON_1_C1, handle_button_press)
+def watch_pedestrian_button():
+    buttons =  [PEDESTRIAN_BUTTON_1_C1, PEDESTRIAN_BUTTON_2_C1, PEDESTRIAN_BUTTON_1_C2, PEDESTRIAN_BUTTON_2_C2]
+    for port in buttons:
+        watch_input_event(port, handle_input_event)
 
-def watch_pedestrian_button_2_c1():
-    watch_input_event(PEDESTRIAN_BUTTON_2_C1, handle_button_press)
+def watch_pass_sensor():
+    sensors =  [MOVEMENT_SENSOR_1_C1, MOVEMENT_SENSOR_2_C1, MOVEMENT_SENSOR_1_C2, MOVEMENT_SENSOR_2_C2]
+    for port in sensors:
+        watch_input_event(port, handle_input_event)   
 
 def init_crossing():
     traffic_thread  = Thread(target=handle_traffic_light_change)
     traffic_thread.start()
     
-    watch_pedestrian_button_1_c1()
-    watch_pedestrian_button_2_c1()
+    watch_pedestrian_button()
+    watch_pass_sensor()
 
     traffic_thread.join()
