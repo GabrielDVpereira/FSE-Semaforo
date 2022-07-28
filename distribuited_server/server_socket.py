@@ -34,6 +34,5 @@ def init_socket():
 
 def send_message(message):
     global connetion
-    print('send_message: {}'.format(connetion))
     if connetion:
         connetion.send(json.dumps(message))

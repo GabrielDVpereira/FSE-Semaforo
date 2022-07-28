@@ -6,13 +6,20 @@ from gpio.output_functions import turn_up_port, turn_off_port
 from gpio.input_functions import watch_input_event
 
 
-from gpio.config import PEDESTRIAN_BUTTON_1_C1, PEDESTRIAN_BUTTON_2_C1, MOVEMENT_SENSOR_1_C1, MOVEMENT_SENSOR_2_C1
-from gpio.config import PEDESTRIAN_BUTTON_1_C2, PEDESTRIAN_BUTTON_2_C2, MOVEMENT_SENSOR_1_C2, MOVEMENT_SENSOR_2_C2
+from gpio.config import car_sensors, inputs_buttons
 
 
 NUMBER_OF_STATES = 6
 MAIN_TRAFFIC_GREEN = 0
 AUX_TRAFFIC_GREEN = 3
+
+car_count_dict = {
+    "car_count_1": 0,
+    "car_count_2": 0,
+    "car_count_3": 0,
+    "car_count_4": 0,
+}
+
 stop_event = Event()
 
 def handle_traffic_light_change():
@@ -20,7 +27,7 @@ def handle_traffic_light_change():
     sec = 0
 
     while True:
-
+        update_central_server_car_count(sec)
         main_curr_state = main_timing_traffic_light[state]
         aux_curr_state = aux_timing_traffic_light[state]
         
@@ -45,9 +52,20 @@ def handle_traffic_light_change():
             state = next_state(state)
 
 def handle_input_event(channel):
+    global car_count_dict
     print("stoping sign... channel={}".format(channel))
-    send_message({"message": "button pressed"})
+    if channel in car_sensors:
+        index = car_sensors.index(channel)
+        event_type = "car_count_{}".format(index+1)
+        car_count_dict[event_type]+=1
     stop_event.set()
+
+
+def update_central_server_car_count(sec):
+    global car_count_dict
+    should_updade_central = sec % 2 == 0
+    if should_updade_central:
+        send_message({"type": "car_count", "data": car_count_dict })
 
 
 def handle_lights_on(lights):
@@ -78,13 +96,11 @@ def next_state(current_state):
     return (current_state + 1) % NUMBER_OF_STATES
 
 def watch_pedestrian_button():
-    buttons =  [PEDESTRIAN_BUTTON_1_C1, PEDESTRIAN_BUTTON_2_C1, PEDESTRIAN_BUTTON_1_C2, PEDESTRIAN_BUTTON_2_C2]
-    for port in buttons:
+    for port in inputs_buttons:
         watch_input_event(port, handle_input_event)
 
 def watch_pass_sensor():
-    sensors =  [MOVEMENT_SENSOR_1_C1, MOVEMENT_SENSOR_2_C1, MOVEMENT_SENSOR_1_C2, MOVEMENT_SENSOR_2_C2]
-    for port in sensors:
+    for port in car_sensors:
         watch_input_event(port, handle_input_event)   
 
 def init_crossing():
