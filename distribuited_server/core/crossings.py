@@ -46,6 +46,7 @@ def handle_traffic_light_change():
 
 def handle_input_event(channel):
     print("stoping sign... channel={}".format(channel))
+    send_message({"message": "button pressed"})
     stop_event.set()
 
 

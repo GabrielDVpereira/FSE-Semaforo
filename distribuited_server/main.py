@@ -5,5 +5,5 @@ from server_socket import init_socket
 
 if __name__ == "__main__":
     config_gpio()
-    # init_socket()
+    init_socket()
     init_crossing()

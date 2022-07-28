@@ -2,7 +2,7 @@ import socket
 import json
 
 HOST = '127.0.0.1'    
-PORT = 3333     
+PORT = 10160     
 
 def init_socket():
     tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

@@ -2,12 +2,13 @@ import socket
 import json
 from threading import Thread, Event
 
-HOST = '127.0.0.1'              
-PORT = 3333   
+HOST = '127.0.0.1'    
+PORT = 10160   
 
 connetion = None
 
 def config_socket():
+    global connetion
     print("Initalizing socket...")
     tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     orig = (HOST, PORT)
@@ -32,5 +33,7 @@ def init_socket():
     socket_thread.start()
 
 def send_message(message):
+    global connetion
+    print('send_message: {}'.format(connetion))
     if connetion:
         connetion.send(json.dumps(message))
