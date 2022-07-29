@@ -4,14 +4,18 @@ from config import main_timing_traffic_light, aux_timing_traffic_light
 from server_socket import send_message
 from gpio.output_functions import turn_up_port, turn_off_port
 from gpio.input_functions import watch_input_event
+from datetime import datetime
+from utils import play_sound
 
 
-from gpio.config import car_sensors, inputs_buttons
+
+from gpio.config import car_sensors, inputs_buttons, speed_sensors
 
 
 NUMBER_OF_STATES = 6
 MAIN_TRAFFIC_GREEN_STATE = 0
 AUX_TRAFFIC_GREEN_STATE = 3
+MAX_SPEED_PERMITTED = 60
 
 car_count_dict = {
     "car_count_1": 0,
@@ -58,7 +62,28 @@ def handle_input_event(channel):
         index = car_sensors.index(channel)
         event_type = "car_count_{}".format(index+1)
         car_count_dict[event_type]+=1
+
     stop_event.set()
+
+date = None
+def handle_speed_event(channel):
+    global date
+    print("A car has passed {}".format(channel))
+    
+    if not date:
+        date = datetime.now()
+        return
+    
+    time = datetime.now() - date 
+    speed = (1 / time.total_seconds()) * 3.6
+
+    if speed > MAX_SPEED_PERMITTED:
+        play_sound()
+    
+    print("time: {}".format(time.total_seconds()))
+    print("speed: {} km/h".format(speed))
+    send_message({"type": "car_speed", "data": speed })
+    date = None
 
 
 def update_central_server_car_count(sec):
@@ -103,11 +128,16 @@ def watch_pass_sensor():
     for port in car_sensors:
         watch_input_event(port, handle_input_event)   
 
+def watch_speed_sensor():
+    for port in speed_sensors:
+        watch_input_event(port, handle_speed_event)     
+
 def init_crossing():
     traffic_thread  = Thread(target=handle_traffic_light_change)
     traffic_thread.start()
     
     watch_pedestrian_button()
     watch_pass_sensor()
+    watch_speed_sensor()
 
     traffic_thread.join()
