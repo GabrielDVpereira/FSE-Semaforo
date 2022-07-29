@@ -10,8 +10,8 @@ from gpio.config import car_sensors, inputs_buttons
 
 
 NUMBER_OF_STATES = 6
-MAIN_TRAFFIC_GREEN = 0
-AUX_TRAFFIC_GREEN = 3
+MAIN_TRAFFIC_GREEN_STATE = 0
+AUX_TRAFFIC_GREEN_STATE = 3
 
 car_count_dict = {
     "car_count_1": 0,
@@ -23,7 +23,7 @@ car_count_dict = {
 stop_event = Event()
 
 def handle_traffic_light_change():
-    state = MAIN_TRAFFIC_GREEN
+    state = MAIN_TRAFFIC_GREEN_STATE
     sec = 0
 
     while True:
@@ -42,7 +42,7 @@ def handle_traffic_light_change():
         if is_stop_event_active() and is_min_timer(sec, main_curr_state['time_min']):
             handle_lights_off(main_active)
             handle_lights_off(aux_active)
-            state = AUX_TRAFFIC_GREEN
+            state = AUX_TRAFFIC_GREEN_STATE
             sec = 0
             clear_button()
         elif is_max_timer(sec, main_curr_state['time_max']):
