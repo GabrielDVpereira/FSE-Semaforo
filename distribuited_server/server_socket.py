@@ -2,37 +2,29 @@ import socket
 import json
 from threading import Thread, Event
 
-HOST = '127.0.0.1'    
+HOST = '164.41.98.26'   
 PORT = 10160   
 
-connetion = None
 
+connection = None
 def config_socket():
-    global connetion
-    print("Initalizing socket...")
-    tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    orig = (HOST, PORT)
-    tcp.bind(orig)
-    tcp.listen(1)
+    global connection
+    connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    dest = (HOST, PORT)
+    connection.connect(dest)
+
     while True:
-        con, cliente = tcp.accept()
-        connetion = con
-        print 'Concetado por', cliente
-
-        while True:
-            msg = con.recv(1024)
-            if not msg: break
-            msg = json.loads(msg)
-            print cliente, msg
-
-        print 'Finalizando conexao do cliente', cliente
-        con.close()
+        msg_rec = connection.recv(1024)
+        msg_rec = json.loads(msg_rec)
+        print(msg_rec)
+      
+    connection.close()
 
 def init_socket():
     socket_thread = Thread(target=config_socket)
     socket_thread.start()
 
 def send_message(message):
-    global connetion
-    if connetion:
-        connetion.send(json.dumps(message))
+    global connection
+    if connection:
+        connection.send(json.dumps(message))
