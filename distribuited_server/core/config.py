@@ -22,5 +22,3 @@ aux_timing_traffic_light = [
 ]
 
 
-
-

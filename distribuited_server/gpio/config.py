@@ -74,6 +74,13 @@ speed_sensors = [
     SPEED_SENSOR_2_B_C2
 ]
 
+speed_sensors_b = [
+    SPEED_SENSOR_1_B_C1,
+    SPEED_SENSOR_2_B_C1, 
+    SPEED_SENSOR_1_B_C2,
+    SPEED_SENSOR_2_B_C2
+]
+
 intputs_sensors = speed_sensors + car_sensors
 
 

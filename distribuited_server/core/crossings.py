@@ -3,13 +3,15 @@ from threading import Thread, Event
 from config import main_timing_traffic_light, aux_timing_traffic_light
 from server_socket import send_message
 from gpio.output_functions import turn_up_port, turn_off_port
-from gpio.input_functions import watch_input_event
+from gpio.input_functions import watch_input_event, remove_input_event
 from datetime import datetime
 from utils import play_sound
+from gpio.config import aux_red_lights, main_red_lights
 
 
 
-from gpio.config import car_sensors, inputs_buttons, speed_sensors
+
+from gpio.config import car_sensors, inputs_buttons, speed_sensors, speed_sensors_b
 
 
 NUMBER_OF_STATES = 6
@@ -26,10 +28,10 @@ car_count_dict = {
 
 stop_event = Event()
 
+state = MAIN_TRAFFIC_GREEN_STATE
 def handle_traffic_light_change():
-    state = MAIN_TRAFFIC_GREEN_STATE
+    global state
     sec = 0
-
     while True:
         update_central_server_car_count(sec)
         main_curr_state = main_timing_traffic_light[state]
@@ -55,21 +57,48 @@ def handle_traffic_light_change():
             handle_lights_off(aux_active)
             state = next_state(state)
 
-def handle_input_event(channel):
+def handle_pedestrean_button(channel):
     global car_count_dict
     print("stoping sign... channel={}".format(channel))
-    if channel in car_sensors:
-        index = car_sensors.index(channel)
-        event_type = "car_count_{}".format(index+1)
-        car_count_dict[event_type]+=1
+    
+    if is_aux_red_lights():
+        stop_event.set()
 
-    stop_event.set()
+def handle_car_sensor(channel):
+    print("[handle_car_sensor]", channel)
+    index = car_sensors.index(channel)
+    event_type = "car_count_{}".format(index+1)
+    car_count_dict[event_type]+=1
+
+    if is_aux_red_lights():
+        stop_event.set()
+
+    remove_input_event(channel)
+    watch_input_event(channel, handle_input_down_event, False)   
+
+def handle_input_down_event(channel):
+    print("[handle_input_down_event]", channel)
+    remove_input_event(channel)
+
+    if is_aux_red_lights():
+        send_message({"type": "red_light_infraction" })
+        play_sound()
+
+
+    watch_input_event(channel, handle_car_sensor) 
+
+
+ 
+
 
 date = None
 def handle_speed_event(channel):
     global date
-    print("A car has passed {}".format(channel))
-    
+    print("[handle_speed_event]",channel)
+
+    if not date and channel not in speed_sensors_b: 
+        return
+
     if not date:
         date = datetime.now()
         return
@@ -78,8 +107,14 @@ def handle_speed_event(channel):
     speed = (1 / time.total_seconds()) * 3.6
 
     if speed > MAX_SPEED_PERMITTED:
+        send_message({"type": "speed_infraction" })
+        play_sound()
+
+    if is_main_red_lights():
+        send_message({"type": "red_light_infraction" })
         play_sound()
     
+    # TODO: enviar contagem de carros para servidor central
     print("time: {}".format(time.total_seconds()))
     print("speed: {} km/h".format(speed))
     send_message({"type": "car_speed", "data": speed })
@@ -108,25 +143,31 @@ def is_stop_event_active():
     return stop_event.is_set()
 
 def is_max_timer(sec, timer):
-    print("sec: {}".format(sec))
-    print("max time: {}".format(timer))
     return sec == timer
 
 def is_min_timer(sec, timer):
-    print("sec: {}".format(sec))
-    print("min time: {}".format(timer))
     return sec >= timer
+
+def is_aux_red_lights():
+    global state
+    aux_state_lights  = aux_timing_traffic_light[state]['active']
+    return aux_state_lights == aux_red_lights
+
+def is_main_red_lights():
+    global state
+    main_state_lights = main_timing_traffic_light[state]['active']
+    return main_state_lights == main_red_lights
 
 def next_state(current_state):
     return (current_state + 1) % NUMBER_OF_STATES
 
 def watch_pedestrian_button():
     for port in inputs_buttons:
-        watch_input_event(port, handle_input_event)
+        watch_input_event(port, handle_pedestrean_button)
 
 def watch_pass_sensor():
     for port in car_sensors:
-        watch_input_event(port, handle_input_event)   
+        watch_input_event(port, handle_car_sensor)   
 
 def watch_speed_sensor():
     for port in speed_sensors:
