@@ -1,7 +1,7 @@
 from time import sleep
 from threading import Thread, Event
 from config import main_timing_traffic_light, aux_timing_traffic_light
-from server_socket import send_message
+from server_socket import send_message, get_message
 from gpio.output_functions import turn_up_port, turn_off_port
 from gpio.input_functions import watch_input_event, remove_input_event
 from datetime import datetime
@@ -15,8 +15,10 @@ from gpio.config import car_sensors, inputs_buttons, speed_sensors, speed_sensor
 
 
 NUMBER_OF_STATES = 6
-MAIN_TRAFFIC_GREEN_STATE = 0
+INITIAL_STATE = 0
+MAIN_TRAFFIC_GREEN_STATE = 1
 AUX_TRAFFIC_GREEN_STATE = 3
+YELLOW_STATE = 6
 MAX_SPEED_PERMITTED = 60
 
 car_count = [
@@ -32,7 +34,7 @@ car_count = [
 
 stop_event = Event()
 
-state = MAIN_TRAFFIC_GREEN_STATE
+state = INITIAL_STATE
 def handle_traffic_light_change():
     global state
     sec = 0
@@ -49,7 +51,18 @@ def handle_traffic_light_change():
         
         sleep(1)
         sec += 1
-        if is_stop_event_active() and is_min_timer(sec, main_curr_state['time_min']):
+        if is_emergency_mode():
+            print("if is_emergency_mode()")
+            handle_lights_off(main_active)
+            handle_lights_off(aux_active)
+            state = MAIN_TRAFFIC_GREEN_STATE
+        elif is_night_mode():
+            print("if is_night_mode()")
+            handle_lights_off(main_active)
+            handle_lights_off(aux_active)
+            sleep(1)
+            state = YELLOW_STATE
+        elif is_stop_event_active() and is_min_timer(sec, main_curr_state['time_min']):
             handle_lights_off(main_active)
             handle_lights_off(aux_active)
             state = AUX_TRAFFIC_GREEN_STATE
@@ -60,6 +73,19 @@ def handle_traffic_light_change():
             handle_lights_off(main_active)
             handle_lights_off(aux_active)
             state = next_state(state)
+
+def is_emergency_mode():
+    info = get_message()
+    print("[is_emergency_mode]")
+    print(info)
+    return info['emergency_mode']
+
+def is_night_mode():
+    info = get_message()
+    print("[is_night_mode]")
+    print(info)
+    return info['night_mode']
+
 
 def handle_pedestrean_button(channel):
     print("stoping sign... channel={}".format(channel))
@@ -154,7 +180,7 @@ def is_stop_event_active():
     return stop_event.is_set()
 
 def is_max_timer(sec, timer):
-    return sec == timer
+    return sec >= timer
 
 def is_min_timer(sec, timer):
     return sec >= timer
@@ -175,6 +201,7 @@ def get_crossing(channel):
     return 0
 
 def next_state(current_state):
+    if current_state == YELLOW_STATE: return 0
     return (current_state + 1) % NUMBER_OF_STATES
 
 def watch_pedestrian_button():

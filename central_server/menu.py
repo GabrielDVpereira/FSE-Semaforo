@@ -3,6 +3,8 @@ from datetime import datetime
 from time import sleep
 from threading import Thread, Event
 
+import central_socket
+
 import sys
 output_stream = sys.stdout
 
@@ -165,6 +167,28 @@ def config_menu():
         output_stream.flush()
         sleep(1)
 
+
+def config_menu_options():
+    emergency_mode = False
+    night_mode = False
+    while True:
+        print("1 - {} MODO DE EMERGÊNCIA \n".format("LIGAR" if not emergency_mode else "DESLIGAR"))
+        print("2 - {} MODO DE NOTURNO \n\n".format("LIGAR" if not night_mode else "DESLIGAR"))
+        
+        option = int(input("Selecione uma opção: "))
+        
+        if option == 1:
+           emergency_mode = not emergency_mode
+        else:
+            night_mode = not night_mode
+ 
+        central_socket.send_message({
+            "emergency_mode": emergency_mode, 
+            "night_mode": night_mode
+        })
+
+
+
 def init_menu():
-    menu_thread = Thread(target=config_menu)
+    menu_thread = Thread(target=config_menu_options)
     menu_thread.start()

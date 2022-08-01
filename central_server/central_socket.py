@@ -1,7 +1,7 @@
 import socket
 import json
 import os
-from menu import update_menu_info
+import menu
 from threading import Thread, Event
 
 
@@ -12,7 +12,7 @@ PORT = 10160
 connection = None
 
 def config_socket():
-    global connetion
+    global connection
     print("Initalizing socket...")
     tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     orig = (HOST, PORT)
@@ -20,17 +20,23 @@ def config_socket():
     tcp.listen(1)
     while True:
         con, cliente = tcp.accept()
-        connetion = con
+        connection = con
         print('Concetado por: {}'.format(cliente))
 
         while True:
             msg = con.recv(1024)
             if not msg: break
             msg = json.loads(msg)
-            update_menu_info(msg)
+            menu.update_menu_info(msg)
 
         print('Finalizando conexao do cliente: {}'.format(cliente))
         con.close()
+
+def send_message(message):
+    global connection
+    print(message)
+    if connection:
+        connection.send(json.dumps(message).encode())
 
 def init_socket():
     socket_thread = Thread(target=config_socket)
