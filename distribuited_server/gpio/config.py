@@ -61,7 +61,10 @@ inputs_buttons = [
     PEDESTRIAN_BUTTON_2_C2,  
 ]
 
-car_sensors = [CAR_SENSOR_1_C1, CAR_SENSOR_2_C1, CAR_SENSOR_1_C2, CAR_SENSOR_2_C2]
+car_sensors_1 = [CAR_SENSOR_1_C1, CAR_SENSOR_1_C2]
+car_sensors_2 = [CAR_SENSOR_2_C1, CAR_SENSOR_2_C2]
+
+car_sensors = car_sensors_1 + car_sensors_2
 
 speed_sensors = [ 
     SPEED_SENSOR_1_A_C1,
@@ -84,6 +87,23 @@ speed_sensors_b = [
 intputs_sensors = speed_sensors + car_sensors
 
 
+crossing_1 = [
+    CAR_SENSOR_1_C1,
+    CAR_SENSOR_2_C1,
+    SPEED_SENSOR_1_A_C1,
+    SPEED_SENSOR_1_B_C1,
+    SPEED_SENSOR_2_A_C1,
+    SPEED_SENSOR_2_B_C1,
+]
+
+crossing_2 = [
+    CAR_SENSOR_1_C2,
+    CAR_SENSOR_2_C2,
+    SPEED_SENSOR_1_A_C2,
+    SPEED_SENSOR_1_B_C2,
+    SPEED_SENSOR_2_A_C2,
+    SPEED_SENSOR_2_B_C2,
+]
 
 def reset_outputs():
     for out in outputs:

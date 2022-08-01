@@ -1,5 +1,9 @@
 import socket
 import json
+import os
+from menu import update_menu_info
+from threading import Thread, Event
+
 
 HOST = '164.41.98.26'    
 PORT = 10160     
@@ -7,7 +11,7 @@ PORT = 10160
 
 connection = None
 
-def init_socket():
+def config_socket():
     global connetion
     print("Initalizing socket...")
     tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -23,8 +27,11 @@ def init_socket():
             msg = con.recv(1024)
             if not msg: break
             msg = json.loads(msg)
-            print(cliente, msg)
+            update_menu_info(msg)
 
         print('Finalizando conexao do cliente: {}'.format(cliente))
         con.close()
 
+def init_socket():
+    socket_thread = Thread(target=config_socket)
+    socket_thread.start()

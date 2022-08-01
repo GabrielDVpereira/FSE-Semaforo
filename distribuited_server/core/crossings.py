@@ -11,7 +11,7 @@ from gpio.config import aux_red_lights, main_red_lights
 
 
 
-from gpio.config import car_sensors, inputs_buttons, speed_sensors, speed_sensors_b
+from gpio.config import car_sensors, inputs_buttons, speed_sensors, speed_sensors_b, crossing_1, crossing_2, car_sensors_1, car_sensors_2
 
 
 NUMBER_OF_STATES = 6
@@ -19,12 +19,16 @@ MAIN_TRAFFIC_GREEN_STATE = 0
 AUX_TRAFFIC_GREEN_STATE = 3
 MAX_SPEED_PERMITTED = 60
 
-car_count_dict = {
-    "car_count_1": 0,
-    "car_count_2": 0,
-    "car_count_3": 0,
-    "car_count_4": 0,
-}
+car_count = [
+    {
+        "line1": 0,
+        "line2": 0,
+    },
+    {
+        "line1": 0,
+        "line2": 0,
+    },
+]
 
 stop_event = Event()
 
@@ -58,17 +62,22 @@ def handle_traffic_light_change():
             state = next_state(state)
 
 def handle_pedestrean_button(channel):
-    global car_count_dict
     print("stoping sign... channel={}".format(channel))
     
     if is_aux_red_lights():
         stop_event.set()
 
 def handle_car_sensor(channel):
+    global car_count
     print("[handle_car_sensor]", channel)
-    index = car_sensors.index(channel)
-    event_type = "car_count_{}".format(index+1)
-    car_count_dict[event_type]+=1
+    
+    crossing = get_crossing(channel)
+    crossing_index = crossing - 1
+
+    if channel in car_sensors_1:
+        car_count[crossing_index]['line1']+=1
+    else:
+        car_count[crossing_index]['line2']+=1
 
     if is_aux_red_lights():
         stop_event.set()
@@ -81,7 +90,7 @@ def handle_input_down_event(channel):
     remove_input_event(channel)
 
     if is_aux_red_lights():
-        send_message({"type": "red_light_infraction" })
+        send_message({"type": "red_light_infraction", "crossing": get_crossing(channel) })
         play_sound()
 
 
@@ -107,25 +116,27 @@ def handle_speed_event(channel):
     speed = (1 / time.total_seconds()) * 3.6
 
     if speed > MAX_SPEED_PERMITTED:
-        send_message({"type": "speed_infraction" })
+        send_message({"type": "speed_infraction", "crossing": get_crossing(channel) })
         play_sound()
 
     if is_main_red_lights():
-        send_message({"type": "red_light_infraction" })
+        send_message({"type": "red_light_infraction", "crossing": get_crossing(channel) })
         play_sound()
     
     # TODO: enviar contagem de carros para servidor central
     print("time: {}".format(time.total_seconds()))
     print("speed: {} km/h".format(speed))
-    send_message({"type": "car_speed", "data": speed })
+    send_message({"type": "car_speed", "data": speed, "crossing": get_crossing(channel) })
     date = None
 
 
 def update_central_server_car_count(sec):
-    global car_count_dict
+    global car_count
     should_updade_central = sec % 2 == 0
+
     if should_updade_central:
-        send_message({"type": "car_count", "data": car_count_dict })
+        send_message({"type": "car_count", "data": car_count[0], "crossing": 1 })
+        send_message({"type": "car_count", "data": car_count[1], "crossing": 2 })
 
 
 def handle_lights_on(lights):
@@ -157,6 +168,11 @@ def is_main_red_lights():
     global state
     main_state_lights = main_timing_traffic_light[state]['active']
     return main_state_lights == main_red_lights
+
+def get_crossing(channel):
+    if channel in crossing_1: return 1
+    elif channel in crossing_2: return 2
+    return 0
 
 def next_state(current_state):
     return (current_state + 1) % NUMBER_OF_STATES
