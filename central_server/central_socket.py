@@ -25,7 +25,7 @@ def config_socket():
     tcp.bind(orig)
     tcp.listen(1)
     while True:
-        con = tcp.accept()
+        con, client = tcp.accept()
         connections.append(con)
         read_message_thread = Thread(target=connection_thread, args=(con,))
         read_message_thread.start()
