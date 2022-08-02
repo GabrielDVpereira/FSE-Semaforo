@@ -1,6 +1,6 @@
 from datetime import datetime
 from time import sleep
-from threading import Thread, Event
+from threading import Thread
 import central_socket
 import os
 from menu_model import MenuInfo
@@ -17,8 +17,8 @@ def update_menu_info(msg):
         handle_red_light_infraction(msg)
     elif msg_type == "speed_infraction":
         handle_speed_infraction(msg)
-    # elif msg_type == "car_count":
-        # handle_car_count(msg)
+    elif msg_type == "car_count":
+        handle_car_count(msg)
     
 def handle_new_connection(msg):
     print("Handle new Connection: {}".format(msg))
@@ -53,29 +53,28 @@ def handle_speed_infraction(msg):
 
     menu_info.speed_infraction +=1 
 
-date = None
 def handle_car_count(msg):
     global date
     global infos
 
+    if not infos:
+        return # No instance initialized
+
     crossing = msg["crossing"]
     menu_info = infos[crossing]
 
+
     menu_info.car_count['line1'] = msg["data"]["line1"]
     menu_info.car_count['line2'] = msg["data"]["line2"]
-    menu_info.car_count['time'] = 1 if not date else (datetime.now() - date).total_seconds() / 60
 
-    date = datetime.now()    
 
-def get_traffic_flow(meu_info):
-    time =  meu_info.car_count['time']
-    line1 = meu_info.car_count['line1']
-    line2 = meu_info.car_count['line2'] 
+def get_traffic_flow(menu_info, line_str):
+    line = menu_info.car_count[line_str]
+    now = datetime.now()
 
-    flow1 = 0 if time == 0 else line1 / time
-    flow2 = 0 if time == 0 else line2 / time
+    time_diff = (now - menu_info.start_time).total_seconds() / 60 # Difference in minutes
 
-    return [str(flow1), str(flow2)]
+    return line / time_diff
 
 def get_average_speed(meu_info):
     speed_amount = meu_info.car_speed['speed_amount']
@@ -91,17 +90,15 @@ def get_speed_infraction(meu_info):
 
 def print_menu_info(menu_info):
 
-    trafic_flow = get_traffic_flow(menu_info)
-
     print("CRUZAMENTO {}".format(menu_info.crossing))
     print("\n")
 
-    print("FLUXO DE TRÂNSITO SENTIDO 1 (VIA AUXILIAR): {}".format(trafic_flow[0]))
-    print("FLUXO DE TRÂNSITO SENTIDO 2 (VIA AUXILIAR): {}".format(trafic_flow[1]))
+    print("FLUXO DE TRÂNSITO SENTIDO 1 (VIA AUXILIAR): {} carros/min".format(get_traffic_flow(menu_info, 'line1')))
+    print("FLUXO DE TRÂNSITO SENTIDO 2 (VIA AUXILIAR): {} carros/min".format(get_traffic_flow(menu_info, 'line2')))
     print("\n")
 
 
-    print("VELOCIDADE MÉDIA NA VIA (VIA PRINCIPAL): {}".format(get_average_speed(menu_info)))
+    print("VELOCIDADE MÉDIA NA VIA (VIA PRINCIPAL): {} km/h".format(get_average_speed(menu_info)))
     print("\n")
 
     print("INFRAÇÃO SINAL VERMELHO: {}".format(get_red_light_infraction(menu_info)))

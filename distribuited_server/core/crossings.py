@@ -17,7 +17,7 @@ MAX_SPEED_PERMITTED = 60
 
 car_count =  {
     "line1": 0,
-    "line2": 0,
+    "line2": 0
 }
 
 stop_event = Event()
