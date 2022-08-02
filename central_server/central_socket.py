@@ -1,8 +1,7 @@
 import socket
 import json
-import os
 import menu
-from threading import Thread, Event
+from threading import Thread
 
 
 HOST = '164.41.98.26'    
@@ -17,9 +16,6 @@ def connection_thread(con):
         msg = json.loads(msg)
         menu.update_menu_info(msg)
 
-    print('Finalizando conexao do cliente')
-    con.close()
-
 def config_socket():
     global connections
 
@@ -29,10 +25,8 @@ def config_socket():
     tcp.bind(orig)
     tcp.listen(1)
     while True:
-        con, cliente = tcp.accept()
+        con = tcp.accept()
         connections.append(con)
-        print('Concetado por: {}'.format(cliente))
-
         read_message_thread = Thread(target=connection_thread, args=(con,))
         read_message_thread.start()
 
@@ -44,5 +38,9 @@ def send_message(message):
             c.send(json.dumps(message).encode())
 
 def init_socket():
+    global connections
     socket_thread = Thread(target=config_socket)
     socket_thread.start()
+
+    for con in connections:
+        con.close()

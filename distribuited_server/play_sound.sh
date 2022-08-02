@@ -1,1 +1,1 @@
-cvlc --play-and-exit ./alarm.mp3
+cvlc --play-and-exit $(pwd)/alarm.mp3

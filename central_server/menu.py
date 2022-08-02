@@ -57,10 +57,11 @@ def handle_car_count(msg):
     global date
     global infos
 
-    if not infos:
-        return # No instance initialized
-
     crossing = msg["crossing"]
+
+    if crossing not in infos:
+        return
+
     menu_info = infos[crossing]
 
 
@@ -73,7 +74,6 @@ def get_traffic_flow(menu_info, line_str):
     now = datetime.now()
 
     time_diff = (now - menu_info.start_time).total_seconds() / 60 # Difference in minutes
-
     return line / time_diff
 
 def get_average_speed(meu_info):
@@ -117,6 +117,7 @@ def signal_handler(signal, frame):
     interrupted = True
 
 def print_crossing_info():
+    global infos
     global interrupted
     while True:
 
@@ -138,19 +139,31 @@ def print_crossing_actions():
     while True:
         clear()
         print("CONTROLE DE ACÕES \n\n")
-        print("1 - {} MODO DE EMERGÊNCIA \n".format("LIGAR" if not emergency_mode else "DESLIGAR"))
-        print("2 - {} MODO DE NOTURNO \n".format("LIGAR" if not night_mode else "DESLIGAR"))
+        print("1 - {} MODO DE EMERGÊNCIA".format("LIGAR" if not emergency_mode else "DESLIGAR"))
+        print("2 - {} MODO DE NOTURNO".format("LIGAR" if not night_mode else "DESLIGAR"))
         print("3 - Voltar")
         
-        option = int(input("Selecione uma opção: "))
+        option = int(input("Digite uma opção e pressine ENTER: "))
         
         if option == 1:
-           emergency_mode = not emergency_mode
+           if night_mode: 
+                print("Desligue o modo noturno para ativar o modo de emergência")
+                sleep(1)
+           else: 
+            emergency_mode = not emergency_mode
         elif option == 2:
-            night_mode = not night_mode
+            if emergency_mode: 
+                print("Desligue o modo de emergencia para ativar o modo noturno")
+                sleep(1)
+            else: 
+                night_mode = not night_mode
         elif option == 3: 
-            clear()
-            break
+            if emergency_mode or night_mode: 
+                print("Desligue todos os modos antes de sair")
+                sleep(1)
+            else:
+                clear()
+                break
     
         central_socket.send_message({
             "emergency_mode": emergency_mode, 
@@ -166,7 +179,7 @@ def print_menu():
         print("Selecione uma das opções abaixo:\n\n")
         print("1 - Painel de monitoramento\n")
         print("2 - Painel de controle de ações\n")
-        option = int(input())
+        option = int(input("Selecione uma das opções de pressione ENTER: "))
         if option == 1: print_crossing_info()
         elif option == 2: print_crossing_actions()
         else: break
