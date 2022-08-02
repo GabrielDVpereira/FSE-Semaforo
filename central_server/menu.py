@@ -96,7 +96,6 @@ def update_menu_info(msg):
         handle_car_count(msg)
     
 def handle_new_connection(msg):
-    print("Handle new Connection: {}".format(msg))
     crossing = msg["crossing"]
     infos[crossing] = MenuInfo(crossing)
     
