@@ -13,5 +13,5 @@ if __name__ == "__main__":
         ports = json.load(json_file)
     
     config_gpio(ports)
-    init_socket()
+    init_socket(ports['crossing'])
     init_crossing(ports)
