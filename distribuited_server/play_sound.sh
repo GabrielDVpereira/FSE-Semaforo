@@ -1,1 +1,1 @@
-omxplayer -p -o local ./alarm.mp3
+cvlc --play-and-exit ./alarm.mp3

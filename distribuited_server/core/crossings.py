@@ -28,7 +28,6 @@ main_timing_traffic_light = None
 aux_timing_traffic_light = None
 
 def init_crossing(current_ports):
-    print(current_ports)
     global ports
     global main_timing_traffic_light
     global aux_timing_traffic_light
@@ -110,14 +109,10 @@ def watch_speed_sensor():
 
 def is_emergency_mode():
     info = get_message()
-    print("[is_emergency_mode]")
-    print(info)
     return info['emergency_mode']
 
 def is_night_mode():
     info = get_message()
-    print("[is_night_mode]")
-    print(info)
     return info['night_mode']
 
 
@@ -147,6 +142,7 @@ def handle_input_down_event(channel):
     remove_input_event(channel)
 
     if is_aux_red_lights():
+        print("red_light_infraction")
         send_message({"type": "red_light_infraction", "crossing": ports["crossing"] })
         play_sound()
 
@@ -164,7 +160,7 @@ def handle_speed_event(channel):
 
     speed_sensors_b = [
         ports["speed_sensors"]["speed_sensor_1_b"], 
-        ports["speed_sensors"]["speed_sensor_1_b"]
+        ports["speed_sensors"]["speed_sensor_2_b"]
     ]
 
     if not date and channel not in speed_sensors_b: 
@@ -178,10 +174,12 @@ def handle_speed_event(channel):
     speed = (1 / time.total_seconds()) * 3.6
 
     if speed > MAX_SPEED_PERMITTED:
+        print("speed_infraction")
         send_message({"type": "speed_infraction", "crossing": ports["crossing"] })
         play_sound()
 
     if is_main_red_lights():
+        print("red_light_infraction")
         send_message({"type": "red_light_infraction", "crossing": ports["crossing"] })
         play_sound()
     
@@ -224,7 +222,7 @@ def is_aux_red_lights():
     global aux_timing_traffic_light
 
     current_state = aux_timing_traffic_light[state]
-    return current_state == ports['outputs']['traffic_light_red_1']
+    return current_state["active"] == ports['outputs']['traffic_light_red_1']
 
 def is_main_red_lights():
     global state
@@ -232,7 +230,7 @@ def is_main_red_lights():
     global main_timing_traffic_light
     
     current_state = main_timing_traffic_light[state]
-    return current_state == ports['outputs']['traffic_light_red_2']
+    return current_state["active"] == ports['outputs']['traffic_light_red_2']
 
 def next_state(current_state):
     if current_state == YELLOW_STATE: return 0

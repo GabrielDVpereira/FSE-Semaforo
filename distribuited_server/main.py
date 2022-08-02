@@ -12,7 +12,6 @@ if __name__ == "__main__":
     with open(config_path) as json_file:
         ports = json.load(json_file)
     
-    
     config_gpio(ports)
-    # init_socket()
+    init_socket()
     init_crossing(ports)
