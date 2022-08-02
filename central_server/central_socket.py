@@ -3,10 +3,6 @@ import json
 import menu
 from threading import Thread
 
-
-HOST = '164.41.98.26'    
-PORT = 10160     
-
 connections = []
 
 def connection_thread(con):
@@ -16,12 +12,12 @@ def connection_thread(con):
         msg = json.loads(msg)
         menu.update_menu_info(msg)
 
-def config_socket():
+def config_socket(tcp_ip_address, tcp_port):
     global connections
 
     print("Initalizing socket...")
     tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    orig = (HOST, PORT)
+    orig = (tcp_ip_address, tcp_port)
     tcp.bind(orig)
     tcp.listen(1)
     while True:
@@ -37,9 +33,9 @@ def send_message(message):
         for c in connections:
             c.send(json.dumps(message).encode())
 
-def init_socket():
+def init_socket(tcp_ip_address, tcp_port):
     global connections
-    socket_thread = Thread(target=config_socket)
+    socket_thread = Thread(target=config_socket, args=(tcp_ip_address, tcp_port))
     socket_thread.start()
 
     for con in connections:
