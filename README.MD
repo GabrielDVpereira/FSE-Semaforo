@@ -22,7 +22,7 @@ Após o acesso, entre do diretório onde se encontra o código fonte do projeto 
 ### Conectando-se aos servidores distribuídos
 
 Para conectar os servidores distribuídos, é necessário a criação da instância de mais um terminal para cada servidor distribuído que irá acessar o servidor central. 
-Com uma nova instância do terminal aberta (mantendo a execução do servidor central em execução) acesse a placa que irá executar o servidor distribuído através do comando: 
+Com uma nova instância do terminal aberta (mantendo o terminal do servidor central em execução) acesse a placa que irá executar o servidor distribuído através do comando: 
 
 ```
     ssh gabrielpereira@164.41.98.17 -p 13508
@@ -55,16 +55,16 @@ O comando segue o seguinte formato que deve ser respeitado:
 
 Obs: O comando para executar servidor central, de acordo com a configuração desse manual, segue o ip 164.41.98.26 e a porta 10160, pois é onde está hospedado o servidor central. 
 
-### Servidor Central
+### Servidor Distribuído
 
 Após executar o servidor cental, pode-se executar o servidor distribuído. Entre na aba do terminal onde foi configurado o(s) servidor distribuido(s), e execute o comando: 
 
-Para o servidor que irá representar o primeiro cruzamento: 
+- Para o servidor que irá representar o primeiro cruzamento
 ```
     python main.py crossing_1.json 164.41.98.26 10160
 ```
 
-Para o servidor que irá representar o segundo cruzamento: 
+- Para o servidor que irá representar o segundo cruzamento
 ```
     python main.py crossing_2.json 164.41.98.26 10160
 ```
@@ -75,5 +75,5 @@ O comando segue o seguinte formato que deve ser respeitado:
     python main.py [ARQUIVO_CONFIGURACAO] [HOST_TCP] [PORT_TCP]
 ```
 
-Obs: O comando para executar servidor distribuido, de acordo com a configuração desse manual, segue o ip 164.41.98.26 e a porta 10160, pois é onde está hospedado o servidor central. Há também 2 arquivos que configuração para cada cruzamento que deve ser passado junto ao comando de execução. crossing_1.json e crossing_2.json, caso esteja rodando 2 cruzamentos ao mesmo tempo. Caso somente um cruzamento for executado, basta rodar o comando uma vez na instância do terminal passando o arquivo de configuração desejado. 
+Obs: O comando para executar servidor distribuido, de acordo com a configuração desse manual, segue o ip 164.41.98.26 e a porta 10160, pois é onde está hospedado o servidor central. Há também 2 arquivos que configuração para cada cruzamento que deve ser passado junto ao comando de execução. crossing_1.json e crossing_2.json, caso esteja rodando 2 cruzamentos ao mesmo tempo (Lembrar que cada cruzamento deve ser rodado em uma aba diferente do terminal). Caso somente um cruzamento for executado, basta rodar o comando uma vez na instância do terminal passando o arquivo de configuração desejado. 
 
