@@ -1,17 +1,11 @@
 from time import sleep
 from threading import Thread, Event
-from config import main_timing_traffic_light, aux_timing_traffic_light
+from config import get_main_states, get_aux_states
 from server_socket import send_message, get_message
 from gpio.output_functions import turn_up_port, turn_off_port
 from gpio.input_functions import watch_input_event, remove_input_event
 from datetime import datetime
 from utils import play_sound
-from gpio.config import aux_red_lights, main_red_lights
-
-
-
-
-from gpio.config import car_sensors, inputs_buttons, speed_sensors, speed_sensors_b, crossing_1, crossing_2, car_sensors_1, car_sensors_2
 
 
 NUMBER_OF_STATES = 6
@@ -21,22 +15,44 @@ AUX_TRAFFIC_GREEN_STATE = 3
 YELLOW_STATE = 6
 MAX_SPEED_PERMITTED = 60
 
-car_count = [
-    {
-        "line1": 0,
-        "line2": 0,
-    },
-    {
-        "line1": 0,
-        "line2": 0,
-    },
-]
+car_count =  {
+    "line1": 0,
+    "line2": 0,
+}
 
 stop_event = Event()
-
 state = INITIAL_STATE
+ports = None
+
+main_timing_traffic_light = None
+aux_timing_traffic_light = None
+
+def init_crossing(current_ports):
+    print(current_ports)
+    global ports
+    global main_timing_traffic_light
+    global aux_timing_traffic_light
+
+    ports  = current_ports
+
+    main_timing_traffic_light = get_main_states(ports["outputs"])
+    aux_timing_traffic_light = get_aux_states(ports["outputs"]) 
+
+    traffic_thread  = Thread(target=handle_traffic_light_change)
+    traffic_thread.start()
+    
+    watch_pedestrian_button()
+    watch_pass_sensor()
+    watch_speed_sensor()
+
+    traffic_thread.join()
+
+
 def handle_traffic_light_change():
     global state
+    global ports
+
+
     sec = 0
     while True:
         update_central_server_car_count(sec)
@@ -74,6 +90,24 @@ def handle_traffic_light_change():
             handle_lights_off(aux_active)
             state = next_state(state)
 
+def watch_pedestrian_button():
+    global ports
+    buttons = ports['buttons']
+    for port in buttons:
+        watch_input_event(buttons[port], handle_pedestrean_button)
+
+def watch_pass_sensor():
+    global ports
+    car_sensors = ports['car_sensors']
+    for port in car_sensors:
+        watch_input_event(car_sensors[port], handle_car_sensor)   
+
+def watch_speed_sensor():
+    global ports
+    speed_sensors = ports['speed_sensors']
+    for port in speed_sensors:
+        watch_input_event(speed_sensors[port], handle_speed_event)   
+
 def is_emergency_mode():
     info = get_message()
     print("[is_emergency_mode]")
@@ -97,13 +131,10 @@ def handle_car_sensor(channel):
     global car_count
     print("[handle_car_sensor]", channel)
     
-    crossing = get_crossing(channel)
-    crossing_index = crossing - 1
-
-    if channel in car_sensors_1:
-        car_count[crossing_index]['line1']+=1
+    if channel == ports["car_sensors"]["car_sensor_1"]:
+        car_count['line1']+=1
     else:
-        car_count[crossing_index]['line2']+=1
+        car_count['line2']+=1
 
     if is_aux_red_lights():
         stop_event.set()
@@ -116,7 +147,7 @@ def handle_input_down_event(channel):
     remove_input_event(channel)
 
     if is_aux_red_lights():
-        send_message({"type": "red_light_infraction", "crossing": get_crossing(channel) })
+        send_message({"type": "red_light_infraction", "crossing": ports["crossing"] })
         play_sound()
 
 
@@ -131,6 +162,11 @@ def handle_speed_event(channel):
     global date
     print("[handle_speed_event]",channel)
 
+    speed_sensors_b = [
+        ports["speed_sensors"]["speed_sensor_1_b"], 
+        ports["speed_sensors"]["speed_sensor_1_b"]
+    ]
+
     if not date and channel not in speed_sensors_b: 
         return
 
@@ -142,17 +178,17 @@ def handle_speed_event(channel):
     speed = (1 / time.total_seconds()) * 3.6
 
     if speed > MAX_SPEED_PERMITTED:
-        send_message({"type": "speed_infraction", "crossing": get_crossing(channel) })
+        send_message({"type": "speed_infraction", "crossing": ports["crossing"] })
         play_sound()
 
     if is_main_red_lights():
-        send_message({"type": "red_light_infraction", "crossing": get_crossing(channel) })
+        send_message({"type": "red_light_infraction", "crossing": ports["crossing"] })
         play_sound()
     
     # TODO: enviar contagem de carros para servidor central
     print("time: {}".format(time.total_seconds()))
     print("speed: {} km/h".format(speed))
-    send_message({"type": "car_speed", "data": speed, "crossing": get_crossing(channel) })
+    send_message({"type": "car_speed", "data": speed, "crossing": ports["crossing"] })
     date = None
 
 
@@ -161,17 +197,14 @@ def update_central_server_car_count(sec):
     should_updade_central = sec % 2 == 0
 
     if should_updade_central:
-        send_message({"type": "car_count", "data": car_count[0], "crossing": 1 })
-        send_message({"type": "car_count", "data": car_count[1], "crossing": 2 })
+        send_message({"type": "car_count", "data": car_count, "crossing": ports["crossing"] })
 
 
-def handle_lights_on(lights):
-    for l in lights:
-        turn_up_port(l)
+def handle_lights_on(l):
+    turn_up_port(l)
 
-def handle_lights_off(lights):
-    for l in lights:
-        turn_off_port(l)
+def handle_lights_off(l):
+    turn_off_port(l)
 
 def clear_button():
      stop_event.clear()
@@ -187,41 +220,22 @@ def is_min_timer(sec, timer):
 
 def is_aux_red_lights():
     global state
-    aux_state_lights  = aux_timing_traffic_light[state]['active']
-    return aux_state_lights == aux_red_lights
+    global ports
+    global aux_timing_traffic_light
+
+    current_state = aux_timing_traffic_light[state]
+    return current_state == ports['outputs']['traffic_light_red_1']
 
 def is_main_red_lights():
     global state
-    main_state_lights = main_timing_traffic_light[state]['active']
-    return main_state_lights == main_red_lights
-
-def get_crossing(channel):
-    if channel in crossing_1: return 1
-    elif channel in crossing_2: return 2
-    return 0
+    global ports
+    global main_timing_traffic_light
+    
+    current_state = main_timing_traffic_light[state]
+    return current_state == ports['outputs']['traffic_light_red_2']
 
 def next_state(current_state):
     if current_state == YELLOW_STATE: return 0
     return (current_state + 1) % NUMBER_OF_STATES
 
-def watch_pedestrian_button():
-    for port in inputs_buttons:
-        watch_input_event(port, handle_pedestrean_button)
-
-def watch_pass_sensor():
-    for port in car_sensors:
-        watch_input_event(port, handle_car_sensor)   
-
-def watch_speed_sensor():
-    for port in speed_sensors:
-        watch_input_event(port, handle_speed_event)     
-
-def init_crossing():
-    traffic_thread  = Thread(target=handle_traffic_light_change)
-    traffic_thread.start()
-    
-    watch_pedestrian_button()
-    watch_pass_sensor()
-    watch_speed_sensor()
-
-    traffic_thread.join()
+  

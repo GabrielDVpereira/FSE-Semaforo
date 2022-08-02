@@ -1,0 +1,25 @@
+{
+    "crossing": 1,
+    "outputs": {
+        "traffic_light_green_1": 1,
+        "traffic_light_yellow_1": 26,
+        "traffic_light_red_1": 21,
+        "traffic_light_green_2": 20,
+        "traffic_light_yellow_2": 16,
+        "traffic_light_red_2": 12
+    },
+    "car_sensors": {
+        "car_sensor_1": 14,
+        "car_sensor_2": 15
+    },  
+    "speed_sensors":{
+        "speed_sensor_1_a": 18,
+        "speed_sensor_1_b": 23, 
+        "speed_sensor_2_a": 24, 
+        "speed_sensor_2_b": 25
+    },
+    "buttons": {
+        "pedestrean_button_1": 8, 
+        "pedestrean_button_2": 7
+    }
+}
