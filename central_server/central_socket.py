@@ -7,10 +7,13 @@ connections = []
 
 def connection_thread(con):
     while True:
-        msg = con.recv(1024)
-        if not msg: break
-        msg = json.loads(msg)
-        menu.update_menu_info(msg)
+        try:
+            msg = con.recv(1024)
+            if not msg: break
+            msg = json.loads(msg)
+            menu.update_menu_info(msg)
+        except ValueError:
+            print("Decoding JSON has failed")
 
 def config_socket(tcp_ip_address, tcp_port):
     global connections

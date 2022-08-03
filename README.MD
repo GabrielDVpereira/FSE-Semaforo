@@ -77,3 +77,5 @@ O comando segue o seguinte formato que deve ser respeitado:
 
 Obs: O comando para executar servidor distribuido, de acordo com a configuração desse manual, segue o ip 164.41.98.26 e a porta 10160, pois é onde está hospedado o servidor central. Há também 2 arquivos que configuração para cada cruzamento que deve ser passado junto ao comando de execução. crossing_1.json e crossing_2.json, caso esteja rodando 2 cruzamentos ao mesmo tempo (Lembrar que cada cruzamento deve ser rodado em uma aba diferente do terminal). Caso somente um cruzamento for executado, basta rodar o comando uma vez na instância do terminal passando o arquivo de configuração desejado. 
 
+
+## Uso
