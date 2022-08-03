@@ -79,3 +79,24 @@ Obs: O comando para executar servidor distribuido, de acordo com a configuraçã
 
 
 ## Uso
+
+Após a execução, o seguinte menu será apresentado para monitoramento no servidor central: 
+
+![initial_menu](./assets/initial_menu.png)
+
+Se selecionado a opção 1, o seguinte painel será apresentado: 
+
+
+![panel_menu](./assets/painel.png)
+
+ Pressionando a tecla CTRL + C, retorna-se para o menu anterior
+
+ Se no menu inicial for selecionado a opção 2, será apresentado o menu de controle dos cruzamentos: 
+
+ ![control_menu](./assets/control.png)
+
+ Se, no menu de controle for selecionado alguma opção, como 2, por exemplo, a ação deve ser executada no cruzamento e o painel de controle deverá apresentar a seguinte configuração:
+
+![control_menu](./assets/control2.png)
+
+OBS: Somente após desligar todos as ações é possível sair do menu de monitoramento.

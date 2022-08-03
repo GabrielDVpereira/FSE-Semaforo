@@ -4,6 +4,7 @@ from core.crossings import init_crossing
 from server_socket import init_socket
 import json
 import sys
+from time import sleep
 
 
 if __name__ == "__main__":
@@ -22,4 +23,5 @@ if __name__ == "__main__":
     
     config_gpio(ports)
     init_socket(ports['crossing'], tcp_ip_address, tcp_port)
+    sleep(0.5)
     init_crossing(ports)
